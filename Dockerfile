@@ -39,20 +39,18 @@ RUN usermod -u 1000 www-data
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
 
-# Symfony - téléchargement avec curl
+# Symfony CLI - téléchargement avec curl
 RUN curl -sS https://get.symfony.com/cli/installer | bash && \
-	mv /root/.symfony5/bin/symfony /usr/local/bin/symfony
+    mv /root/.symfony5/bin/symfony /usr/local/bin/symfony
 
-# Télécharger et créer un projet Symfony avec curl
-RUN curl -sS https://get.symfony.com/download | bash -s -- --dir=/var/www/symfony-app --full
-
-# Security checker tool
-RUN curl -L https://github.com/fabpot/local-php-security-checker/releases/download/v${PHP_SECURITY_CHECHER_VERSION}/local-php-security-checker_${PHP_SECURITY_CHECHER_VERSION}_linux_$(dpkg --print-architecture) --output /usr/local/bin/local-php-security-checker && \
-	chmod +x /usr/local/bin/local-php-security-checker
+# Security checker tool - version fixe
+ENV PHP_SECURITY_CHECKER_VERSION=2.1.3
+RUN curl -L https://github.com/fabpot/local-php-security-checker/releases/download/v${PHP_SECURITY_CHECKER_VERSION}/local-php-security-checker_${PHP_SECURITY_CHECKER_VERSION}_linux_$(dpkg --print-architecture) \
+    --output /usr/local/bin/local-php-security-checker && \
+    chmod +x /usr/local/bin/local-php-security-checker
 
 # Xdebug (disabled by default, but installed if required)
-RUN pecl install xdebug-3.3.2 && docker-php-ext-enable xdebug
-ADD php.ini /usr/local/etc/php/conf.d/
+RUN pecl install xdebug-3.4.4 && docker-php-ext-enable xdebug
 
 # Exposer le port
 EXPOSE 9000
