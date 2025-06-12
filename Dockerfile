@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     libwebp-dev \
     libzip-dev \
     libicu-dev \
+    libmagickwand-dev \
     unzip \
     git \
     curl \
@@ -21,6 +22,9 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j$(nproc) gd \
     && docker-php-ext-install zip pdo pdo_mysql exif intl
+
+# Installation de l'extension PHP ImageMagick
+RUN pecl install imagick && docker-php-ext-enable imagick
 
 # Installez vos autres extensions PHP et configurations selon vos besoins
 
