@@ -12,61 +12,66 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      run: |
+        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }}.git .
+        git checkout ${{ github.sha }}
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+    - name: Set up environment variables
+      run: |
+        # Variables de base
+        echo "DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/php8.4-fpm" >> $GITHUB_ENV
+        echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
+        echo "BUILD_DATE_SHORT=$(date -u +'%Y%m%d')" >> $GITHUB_ENV
+        echo "BUILD_TIMESTAMP=$(date -u +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
+        echo "COMMIT_SHA_SHORT=${GITHUB_SHA:0:8}" >> $GITHUB_ENV
+        
+        # Détermination des tags selon le contexte
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          echo "IMAGE_TAGS=${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:pr-${{ github.event.number }}" >> $GITHUB_ENV
+          echo "IMAGE_TAGS=${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:pr-${{ github.event.number }},${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:commit-${GITHUB_SHA}" >> $GITHUB_ENV
+        elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          echo "IMAGE_TAGS=${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:latest,${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:stable,${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:dev,${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:main-${GITHUB_SHA:0:8},${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:commit-${GITHUB_SHA},${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:$(date -u +'%Y%m%d'),${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:$(date -u +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
+        else
+          # Autres branches
+          BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/[^a-zA-Z0-9._-]/-/g')
+          echo "IMAGE_TAGS=${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:branch-${BRANCH_NAME},${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:${BRANCH_NAME}-${GITHUB_SHA:0:8}" >> $GITHUB_ENV
+        fi
 
     - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      run: |
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ secrets.DOCKER_USERNAME }}/php8.4-fpm
-        tags: |
-          # Tags pour les branches
-          type=ref,event=branch,prefix=branch-
-          # Tags pour les pull requests
-          type=ref,event=pr,prefix=pr-
-          # Tag latest pour la branche main uniquement
-          type=raw,value=latest,enable={{is_default_branch}}
-          # Tag stable pour la branche main
-          type=raw,value=stable,enable={{is_default_branch}}
-          # Tags basés sur le commit SHA
-          type=sha,prefix={{branch}}-,format=short
-          type=sha,prefix=commit-,format=long
-          # Tags basés sur la date (format YYYYMMDD)
-          type=schedule,pattern={{date 'YYYYMMDD'}}
-          type=schedule,pattern={{date 'YYYYMMDD-HHmmss'}}
-          # Tags pour les versions sémantiques (si tags Git présents)
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=semver,pattern={{major}}
-          # Tag d'environnement de développement
-          type=raw,value=dev,enable={{is_default_branch}}
-        labels: |
-          org.opencontainers.image.title={{.Name}}
-          org.opencontainers.image.description=PHP 8.4 FPM Docker Image
-          org.opencontainers.image.vendor=${{ github.repository_owner }}
-          org.opencontainers.image.version={{.Tag}}
-          org.opencontainers.image.created={{.Date}}
-          org.opencontainers.image.revision={{.FullCommit}}
-          org.opencontainers.image.source={{.GitURL}}
-          org.opencontainers.image.url=https://github.com/${{ github.repository }}
-          org.opencontainers.image.documentation=https://github.com/${{ github.repository }}/blob/main/README.md
+    - name: Build Docker image with labels
+      run: |
+        docker build \
+          --label "org.opencontainers.image.title=PHP 8.4 FPM Docker Image" \
+          --label "org.opencontainers.image.description=PHP 8.4 FPM Docker Image" \
+          --label "org.opencontainers.image.vendor=${{ github.repository_owner }}" \
+          --label "org.opencontainers.image.created=${BUILD_DATE}" \
+          --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+          --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+          --label "org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}" \
+          --label "org.opencontainers.image.documentation=${{ github.server_url }}/${{ github.repository }}/blob/main/README.md" \
+          --label "org.opencontainers.image.ref.name=${{ github.ref_name }}" \
+          --label "org.opencontainers.image.version=${GITHUB_SHA:0:8}" \
+          -f Dockerfile \
+          -t temp-build-image \
+          .
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./Dockerfile
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+    - name: Tag and push images
+      run: |
+        # Conversion de la variable IMAGE_TAGS en tableau
+        IFS=',' read -ra TAGS <<< "$IMAGE_TAGS"
+        
+        # Tag et push de chaque image
+        for tag in "${TAGS[@]}"; do
+          echo "Tagging and pushing: $tag"
+          docker tag temp-build-image "$tag"
+          docker push "$tag"
+        done
+
+    - name: Cleanup
+      if: always()
+      run: |
+        docker logout
+        docker rmi temp-build-image || true
