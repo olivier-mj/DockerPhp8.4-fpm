@@ -39,9 +39,12 @@ RUN usermod -u 1000 www-data
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
 
-# Symfony tool
-RUN wget https://get.symfony.com/cli/installer -O - | bash && \
+# Symfony - téléchargement avec curl
+RUN curl -sS https://get.symfony.com/cli/installer | bash && \
 	mv /root/.symfony5/bin/symfony /usr/local/bin/symfony
+
+# Télécharger et créer un projet Symfony avec curl
+RUN curl -sS https://get.symfony.com/download | bash -s -- --dir=/var/www/symfony-app --full
 
 # Security checker tool
 RUN curl -L https://github.com/fabpot/local-php-security-checker/releases/download/v${PHP_SECURITY_CHECHER_VERSION}/local-php-security-checker_${PHP_SECURITY_CHECHER_VERSION}_linux_$(dpkg --print-architecture) --output /usr/local/bin/local-php-security-checker && \
