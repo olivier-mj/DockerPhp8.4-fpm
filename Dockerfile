@@ -47,11 +47,8 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ 
 RUN curl -sS https://get.symfony.com/cli/installer | bash && \
     mv /root/.symfony5/bin/symfony /usr/local/bin/symfony
 
-# Security checker tool - version fixe
-ENV PHP_SECURITY_CHECKER_VERSION=2.1.3
-RUN curl -L https://github.com/fabpot/local-php-security-checker/releases/download/v${PHP_SECURITY_CHECKER_VERSION}/local-php-security-checker_${PHP_SECURITY_CHECKER_VERSION}_linux_$(dpkg --print-architecture) \
-    --output /usr/local/bin/local-php-security-checker && \
-    chmod +x /usr/local/bin/local-php-security-checker
+# Note: php-security-checker a été archivé, utiliser 'composer audit' à la place
+# Cette commande est maintenant intégrée dans Composer (depuis la version 2.4)
 
 # Xdebug (disabled by default, but installed if required)
 RUN pecl install xdebug-3.4.4 && docker-php-ext-enable xdebug
