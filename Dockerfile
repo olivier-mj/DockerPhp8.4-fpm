@@ -26,6 +26,12 @@ RUN apt-get update && apt-get install -y \
 # Installation de l'extension PHP ImageMagick
 RUN pecl install imagick && docker-php-ext-enable imagick
 
+# Installation d'APCu pour le cache utilisateur
+RUN pecl install apcu && docker-php-ext-enable apcu
+
+# Activation d'OPcache pour l'optimisation des performances
+RUN docker-php-ext-enable opcache
+
 # Installez vos autres extensions PHP et configurations selon vos besoins
 
 # Vérifiez que FFmpeg est bien installé
