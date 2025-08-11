@@ -74,6 +74,7 @@ Docker image based on PHP 8.4-fpm with useful tools and extensions for modern we
 - **pdo, pdo_mysql** - Database support
 - **gd** - Basic image manipulation
 - **exif** - Image metadata
+- **redis** - Redis client for PHP
 
 ## 🔐 Security Audit
 
