@@ -29,6 +29,9 @@ RUN pecl install imagick && docker-php-ext-enable imagick
 # Installation d'APCu pour le cache utilisateur
 RUN pecl install apcu && docker-php-ext-enable apcu
 
+# Installation de l'extension Redis
+RUN pecl install redis && docker-php-ext-enable redis
+
 # Activation d'OPcache pour l'optimisation des performances
 RUN docker-php-ext-enable opcache
 
