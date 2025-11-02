@@ -4,22 +4,26 @@ Image Docker basée sur PHP 8.4-fpm avec des outils et extensions utiles pour le
 
 ## 📋 Outils inclus
 
-- **wget** - Téléchargement de fichiers
+- **curl / wget** - Téléchargements HTTP(S)
 - **git** - Gestion de versions
-- **nano/vim** - Éditeurs de texte
-- **composer** - Gestionnaire de dépendances PHP
+- **vim** - Éditeur de texte en console
+- **zip / unzip** - Compression et extraction
+- **composer** - Gestionnaire de dépendances PHP (copié depuis l'image officielle `composer:2`)
 - **symfony-cli** - Interface en ligne de commande Symfony
 - **ffmpeg** - Traitement audio/vidéo
 
 ## 🔧 Extensions PHP
 
-- **zip** - Compression/décompression d'archives
-- **intl** - Internationalisation
-- **imagick** - Traitement d'images avancé
-- **xdebug** - Débogage et profilage
-- **pdo, pdo_mysql** - Base de données
-- **gd** - Manipulation d'images de base
+- **apcu** - Cache utilisateur
 - **exif** - Métadonnées d'images
+- **gd** - Manipulation d'images de base
+- **imagick** - Traitement d'images avancé
+- **intl** - Internationalisation
+- **pdo, pdo_mysql** - Base de données
+- **redis** - Client Redis pour PHP
+- **xdebug** - Débogage et profilage
+- **zip** - Compression/décompression d'archives
+- **opcache** - Accélérateur d'opcodes
 
 ## 🔐 Audit de sécurité
 
@@ -43,12 +47,17 @@ composer audit --min-severity=high
 ## 🚀 Utilisation
 
 ```bash
-# Construire l'image
+# Construire l'image localement
 docker build -t php84-fpm .
 
-# Lancer le conteneur
+# Vérifier les extensions chargées
+docker run --rm php84-fpm php -m | grep -E 'apcu|imagick|redis|xdebug'
+
+# Lancer le conteneur pour le développement
 docker run -d -p 9000:9000 -v $(pwd):/var/www php84-fpm
 ```
+
+> Astuce CI/CD : configurez GitHub Actions avec `docker/build-push-action` pour construire et pousser l'image vers Docker Hub lors des pushes sur `main`.
 
 ---
 
@@ -58,23 +67,26 @@ Docker image based on PHP 8.4-fpm with useful tools and extensions for modern we
 
 ## 📋 Included Tools
 
-- **wget** - File downloader
+- **curl / wget** - HTTP(S) downloads
 - **git** - Version control system
-- **nano/vim** - Text editors
-- **composer** - PHP dependency manager
+- **vim** - Console text editor
+- **zip / unzip** - Archive compression utilities
+- **composer** - PHP dependency manager (sourced from the official `composer:2` image)
 - **symfony-cli** - Symfony command line interface
 - **ffmpeg** - Audio/video processing
 
 ## 🔧 PHP Extensions
 
-- **zip** - Archive compression/decompression
-- **intl** - Internationalization
-- **imagick** - Advanced image processing
-- **xdebug** - Debugging and profiling
-- **pdo, pdo_mysql** - Database support
-- **gd** - Basic image manipulation
+- **apcu** - User caching
 - **exif** - Image metadata
+- **gd** - Basic image manipulation
+- **imagick** - Advanced image processing
+- **intl** - Internationalization
+- **pdo, pdo_mysql** - Database support
 - **redis** - Redis client for PHP
+- **xdebug** - Debugging and profiling
+- **zip** - Archive compression/decompression
+- **opcache** - Opcode caching
 
 ## 🔐 Security Audit
 
@@ -98,8 +110,14 @@ composer audit --min-severity=high
 ## 🚀 Usage
 
 ```bash
-# Build the image
+# Build the image locally
 docker build -t php84-fpm .
 
-# Run the container
+# Inspect loaded extensions
+docker run --rm php84-fpm php -m | grep -E 'apcu|imagick|redis|xdebug'
+
+# Run the container for development
 docker run -d -p 9000:9000 -v $(pwd):/var/www php84-fpm
+```
+
+> CI/CD tip: wire up GitHub Actions with `docker/build-push-action` to build and push the image to Docker Hub whenever `main` is updated.
