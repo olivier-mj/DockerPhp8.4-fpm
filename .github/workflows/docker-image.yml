@@ -19,7 +19,7 @@ jobs:
     - name: Set up environment variables
       run: |
         # Variables de base
-        echo "DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/php8.4-fpm" >> $GITHUB_ENV
+        echo "DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/php8.5-fpm" >> $GITHUB_ENV
         echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
         echo "BUILD_DATE_SHORT=$(date -u +'%Y%m%d')" >> $GITHUB_ENV
         echo "BUILD_TIMESTAMP=$(date -u +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
@@ -27,14 +27,14 @@ jobs:
         
         # Détermination des tags selon le contexte
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          echo "IMAGE_TAGS=${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:pr-${{ github.event.number }}" >> $GITHUB_ENV
-          echo "IMAGE_TAGS=${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:pr-${{ github.event.number }},${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:commit-${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "IMAGE_TAGS=${{ secrets.DOCKER_USERNAME }}/php8.5-fpm:pr-${{ github.event.number }}" >> $GITHUB_ENV
+          echo "IMAGE_TAGS=${{ secrets.DOCKER_USERNAME }}/php8.5-fpm:pr-${{ github.event.number }},${{ secrets.DOCKER_USERNAME }}/php8.5-fpm:commit-${GITHUB_SHA}" >> $GITHUB_ENV
         elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-          echo "IMAGE_TAGS=${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:latest,${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:stable,${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:dev,${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:main-${GITHUB_SHA:0:8},${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:commit-${GITHUB_SHA},${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:$(date -u +'%Y%m%d'),${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:$(date -u +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
+          echo "IMAGE_TAGS=${{ secrets.DOCKER_USERNAME }}/php8.5-fpm:latest,${{ secrets.DOCKER_USERNAME }}/php8.5-fpm:stable,${{ secrets.DOCKER_USERNAME }}/php8.5-fpm:dev,${{ secrets.DOCKER_USERNAME }}/php8.5-fpm:main-${GITHUB_SHA:0:8},${{ secrets.DOCKER_USERNAME }}/php8.5-fpm:commit-${GITHUB_SHA},${{ secrets.DOCKER_USERNAME }}/php8.5-fpm:$(date -u +'%Y%m%d'),${{ secrets.DOCKER_USERNAME }}/php8.5-fpm:$(date -u +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
         else
           # Autres branches
           BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/[^a-zA-Z0-9._-]/-/g')
-          echo "IMAGE_TAGS=${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:branch-${BRANCH_NAME},${{ secrets.DOCKER_USERNAME }}/php8.4-fpm:${BRANCH_NAME}-${GITHUB_SHA:0:8}" >> $GITHUB_ENV
+          echo "IMAGE_TAGS=${{ secrets.DOCKER_USERNAME }}/php8.5-fpm:branch-${BRANCH_NAME},${{ secrets.DOCKER_USERNAME }}/php8.5-fpm:${BRANCH_NAME}-${GITHUB_SHA:0:8}" >> $GITHUB_ENV
         fi
 
     - name: Login to Docker Hub
@@ -44,8 +44,8 @@ jobs:
     - name: Build Docker image with labels
       run: |
         docker build \
-          --label "org.opencontainers.image.title=PHP 8.4 FPM Docker Image" \
-          --label "org.opencontainers.image.description=PHP 8.4 FPM Docker Image" \
+          --label "org.opencontainers.image.title=PHP 8.5 FPM Docker Image" \
+          --label "org.opencontainers.image.description=PHP 8.5 FPM Docker Image" \
           --label "org.opencontainers.image.vendor=${{ github.repository_owner }}" \
           --label "org.opencontainers.image.created=${BUILD_DATE}" \
           --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
